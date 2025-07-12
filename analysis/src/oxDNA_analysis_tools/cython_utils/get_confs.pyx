@@ -13,24 +13,24 @@ Cython function to extract a specified number of configurations from a text traj
 Parameters:
     idxs (list) : The list of starting bytes for configurations in the trajectory
     traj_path (str) : The path to the trajectory
-    start (int) : The ID of the first configuration to read in idxs
-    nconfs (int) : How many confs to read?
-    nbases (int) : How many bases per conf?
-    stride (int) : Return only every this many confs within the chunk.
+    start (long long) : The ID of the first configuration to read in idxs
+    nconfs (long long) : How many confs to read?
+    nbases (long long) : How many bases per conf?
+    stride (long long) : Return only every this many confs within the chunk.
     incl_vel (bool) : Are velocities included in the trajectory file?
 """
 @cython.wraparound(False)
 @cython.boundscheck(False)
 @cython.cdivision(True)
-def cget_confs(list idxs, str traj_path, int start, int nconfs, int nbases, bint incl_vel=1):
+def cget_confs(list idxs, str traj_path, long long start, long long nconfs, long long nbases, bint incl_vel=1):
     # Number of configurations to read
-    cdef int conf_count = len(idxs)
-    cdef int cnconfs = nconfs
+    cdef long long conf_count = len(idxs)
+    cdef long long cnconfs = nconfs
     if (start+cnconfs >= conf_count): #this handles the last chunk which may not have nconfs confs remaining.
         cnconfs = conf_count - start
 
     # Configuration start/size markers within the chunk
-    cdef int *sizes = <int *> malloc(cnconfs * sizeof(int))
+    cdef long long *sizes = <long long *> malloc(cnconfs * sizeof(long long))
     cdef long long *conf_starts = <long long *> malloc(cnconfs * sizeof(long long))
     if not sizes or not conf_starts:
         raise MemoryError("Could not allocate memory for the configuration sizes and starts")
@@ -73,9 +73,9 @@ def cget_confs(list idxs, str traj_path, int start, int nconfs, int nbases, bint
 
 @cython.wraparound(False)
 @cython.boundscheck(False)
-cdef parse_conf(char *chunk, int start_byte, int nbases, bint incl_vel=1):
+cdef parse_conf(char *chunk, long long start_byte, long long nbases, bint incl_vel=1):
     cdef int THREE = 3
-    cdef numpy.int64_t time #Windows and Unix use different precision for time. Using `long` means long trajectories can't be loaded on Windows systems.
+    cdef numpy.uint64_t time #Windows and Unix use different precision for time. Using `long` means long trajectories can't be loaded on Windows systems.
     
     #allocate some memory for our configuration
     cdef cbox    = np.zeros(3, dtype = np.float64)
